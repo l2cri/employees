@@ -7,7 +7,7 @@ const app = express();
 const port = 8000;
 const dbUrl = 'mongodb+srv://kcherednik:rLvOD1befzfSbvau@cluster0.i98rv.mongodb.net/test'
 
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 new MongoClient(dbUrl)
     .connect()

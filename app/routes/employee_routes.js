@@ -2,13 +2,13 @@ const ObjectId = require('mongodb').ObjectId
 
 module.exports = function (app, db) {
     // LIST
-    app.get('/employees', async (req, res) => {
+    app.get('/api/employees', async (req, res) => {
         const findResult = await db.collection('employees').find({}).toArray();
 
         res.send(findResult);
     })
     // READ ON
-    app.get('/employees/:id', async (req, res) => {
+    app.get('/api/employees/:id', async (req, res) => {
         const id = req.params.id;
         const details = {'_id': new ObjectId(id)};
 
@@ -18,7 +18,7 @@ module.exports = function (app, db) {
     })
 
     // DELETE
-    app.delete('/employees/:id', async (req, res) => {
+    app.delete('/api/employees/:id', async (req, res) => {
         const id = req.params.id;
         const details = {'_id': new ObjectId(id)}
 
@@ -28,7 +28,7 @@ module.exports = function (app, db) {
     })
 
     // UPDATE
-    app.put('/employees/:id', async (req, res) => {
+    app.put('/api/employees/:id', async (req, res) => {
         const id = req.params.id;
         const details = {'_id': new ObjectId(id)}
         const employee = {
@@ -43,7 +43,7 @@ module.exports = function (app, db) {
     })
 
     // CREATE
-    app.post('/employees', async (req, res) => {
+    app.post('/api/employees', async (req, res) => {
         const result = await db.collection('employees').insertOne({
             name: req.body.name,
             birthday: req.body.birthday,
