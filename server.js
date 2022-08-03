@@ -1,23 +1,22 @@
 const express = require('express');
-const MongoClient = require('mongodb').MongoClient;
+const { MongoClient } = require('mongodb');
 const bodyParser = require('body-parser');
 
-const db = require('./config/db');
 const app = express();
 
 const port = 8000;
+const dbUrl = 'mongodb+srv://kcherednik:rLvOD1befzfSbvau@cluster0.i98rv.mongodb.net/test'
 
 app.use(bodyParser.urlencoded({ extended: true }));
-MongoClient.connect(db.url, (err, database) => {
-    const db = database.db('app')
 
-    if (err) {
-        return console.log(err);
-    }
+new MongoClient(dbUrl)
+    .connect()
+    .then((database) => {
+        const db = database.db('app')
+        require('./app/routes')(app, db);
 
-    require('./app/routes')(app, db);
-
-    app.listen(port, () => {
-        console.log('We are live on ' + port);
+        app.listen(port, () => {
+            console.log('We are live on ' + port);
+        })
     })
-})
+    .catch(console.error);
