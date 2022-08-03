@@ -10,7 +10,7 @@
             :items="items"
             mobile-breakpoint="800"
             class="elevation-0">
-          <template v-slot:item.actioresponsens="{ item }">
+          <template v-slot:item.actions="{ item }">
             <div class="text-truncate">
               <v-icon
                   small
@@ -74,10 +74,6 @@
 </template>
 
 <script>
-import axios from 'axios';
-const apiToken = "keyZIIVNiQPvozEWb"
-const airTableApp = "appXJzFFs2zgj4X5C"
-const airTableName = "Example"
 
 export default {
   name: 'HelloWorld',
@@ -90,88 +86,37 @@ export default {
         { text: 'Оклад', value: 'salary',  sortable: false },
         { text: 'Action', value: 'actions', sortable: false },
       ],
-      items: [],
       dialog: false,
       editedItem: {}
     }
   },
   mounted() {
-    this.loadItems()
+    this.$store.dispatch('employees/load')
   },
   methods: {
     showEditDialog(item) {
       this.editedItem = item||{}
       this.dialog = !this.dialog
     },
-    loadItems() {
-      this.items = []
-      axios.get(`/api/employees`)
-          .then((response) => {
-            this.items = response.data.map((item)=>{
-              return {
-                id: item._id,
-                ...item
-              }
-            })
-          }).catch((error) => {
-        console.log(error)
-      })
-    },
     saveItem(item) {
-      /* this is used for both creating and updating API records
-       the default method is POST for creating a new item */
-
-      let method = "post"
-      let url = `/api/employees`
-      let id = item.id
-
-      // airtable API needs the data to be placed in fields object
-      let data = item
-
-      if (id) {
-        // if the item has an id, we're updating an existing item
-        method = "put"
-        url = `/api/employees/${id}`
-
-        // must remove id from the data for airtable patch to work
-        delete data.id
-      }
-
-      // save the record
-      axios[method](url,
-          data,
-          { headers: {
-              "Content-Type": "application/json"
-            }
-          }).then((response) => {
-        if (response.data && response.data.insertedId) {
-          console.log(response.data)
-          // add new item to state
-          this.editedItem.id = response.data.insertedId
-          if (!id) {
-            // add the new item to items state
-            this.items.push(this.editedItem)
-          }
-          this.editedItem = {}
-        }
-        this.dialog = !this.dialog
-      })
+     if(item.id) {
+       this.$store.dispatch('employees/update', item)
+     } else {
+       this.$store.dispatch('employees/add', item)
+     }
+      this.dialog = false
+      this.editedItem = {}
     },
     deleteItem(item) {
-      //console.log('deleteItem', item)
-      let id = item.id
-      let idx = this.items.findIndex(item => item.id===id)
       if (confirm('Are you sure you want to delete this?')) {
-        axios.delete(`/api/employees/${id}`,
-            { headers: {
-                "Content-Type": "application/json"
-            }
-        }).then((_) => {
-            this.items.splice(idx, 1)
-        })
-        this.items.splice(idx, 1)
+        this.$store.dispatch('employees/delete', item.id)
       }
     },
+  },
+  computed: {
+    items() {
+      return this.$store.state.employees.items
+    }
   }
 }
 </script>
