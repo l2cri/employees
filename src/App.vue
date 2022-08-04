@@ -9,7 +9,6 @@
             :headers="headers"
             :items="items"
             :search="search"
-            :disable-sort="true"
             :loading="loading"
             :server-items-length="totalCount"
             :options.sync="options"
@@ -138,7 +137,7 @@ export default {
         { text: 'Дата рождения', value: 'birthday'},
         { text: 'Должность', value: 'position' },
         { text: 'Оклад', value: 'salary' },
-        { text: 'Action', value: 'actions' },
+        { text: 'Action', value: 'actions', sortable: false },
       ],
       options: {},
       loading: false,
@@ -150,11 +149,6 @@ export default {
       },
       editedItem: {}
     }
-  },
-  async mounted() {
-    this.loading = true
-    await this.$store.dispatch('employees/load', { page: 0, limit: 10})
-    this.loading = false
   },
   methods: {
     showEditDialog(item) {
@@ -220,23 +214,24 @@ export default {
       if (this.options.itemsPerPage === -1) {
         return -1
       }
-      return this.$store.state.employees.paginate.totalItems
+      return this.$store.state.employees.paginate.totalDocs
     }
   },
   watch: {
     options: {
       async handler() {
-        const page = this.options.page - 1
-        const itemsPerPage = this.options.itemsPerPage
-
-        if (
-            page !==  this.$store.state.employees.paginate.page
-            || itemsPerPage !== this.$store.state.employees.paginate.limit
-        ) {
-          this.loading = true
-          await this.$store.dispatch('employees/load', { page, limit: itemsPerPage})
-          this.loading = false
+        const optionsPage = {
+          page: this.options.page,
+          limit: this.options.itemsPerPage,
         }
+        if (this.options.sortBy && this.options.sortBy.length) {
+          const suffix =  this.options.sortDesc[0] === false ? '-' : ''
+          optionsPage['sort'] = suffix  + this.options.sortBy[0]
+        }
+        this.loading = true
+        await this.$store.dispatch('employees/load', optionsPage)
+        this.loading = false
+
       },
       deep: true,
     },

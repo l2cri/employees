@@ -5,18 +5,18 @@ export default {
     state: () => ({
         items: [],
         paginate: {
-            page: 0,
+            page: 1,
             limit: 10,
             totalPages: 0,
-            totalItems: 0
+            totalDocs: 0
         }
     }),
     mutations: {
         set(state, data) {
 
-            const {items, ...paginate} = data
+            const {docs, ...paginate} = data
 
-            state.items = items.map((item) => ({
+            state.items = docs.map((item) => ({
                 id: item._id,
                 ...item
             }))
@@ -45,8 +45,8 @@ export default {
         },
     },
     actions: {
-        load ({ commit }, { page = 0, limit = 10 }) {
-            return axios.get(`/api/employees?page=${page}&limit=${limit}`)
+        load ({ commit }, options) {
+            return axios.get(`/api/employees?${new URLSearchParams(options)}`)
                 .then((response) => {
                     commit('set', response.data)
                 })

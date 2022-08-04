@@ -5,24 +5,15 @@ const Employee = require('../models/employee')
 
 router.get('/', (req, res) => {
     const pageOptions = {
-        page: parseInt(req.query.page, 10) || 0,
-        limit: parseInt(req.query.limit, 10) || 10
+        page: parseInt(req.query.page, 10) || 1,
+        limit: parseInt(req.query.limit, 10) || 10,
+        sort: req.query.sort,
+        pagination: !(req.query.limit && req.query.limit === '-1'), // all elements
     }
 
-    Employee.find()
-        .skip(pageOptions.page * pageOptions.limit)
-        .limit(pageOptions.limit > 0 ? pageOptions.limit : false)
-        .sort({name: 'asc'})
-        .exec(function (err, items) {
-            Employee.count().exec(function (err, totalItems) {
-                res.json({
-                    items : items,
-                    ...pageOptions,
-                    totalPages: pageOptions.limit > 0 ? Math.ceil(totalItems / pageOptions.limit) : 1,
-                    totalItems
-                })
-            })
-        })
+    Employee.paginate({}, pageOptions,  (err, result) => {
+        res.json(result)
+    })
 })
 
 router.post('/', (req, res) => {
