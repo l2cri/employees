@@ -19,15 +19,17 @@ export default {
 
             state.items = items;
         },
-        add(state, item) {
+        add(state, { item, id }) {
             const items = [ ...state.items];
-            items.push(item);
+            items.push({ ...item, id });
 
             state.items = items;
         },
-        update(state, item) {
+        update(state, { item, id }) {
             const items = [ ...state.items];
-            // fixme
+            const idx = items.findIndex(item => item.id===id);
+            items[idx] = item;
+
             state.items = items;
         },
     },
@@ -51,14 +53,14 @@ export default {
                 })
         },
         add({ commit, state }, item) {
-            axios.post('/api/employees', item).then(_ => {
-                commit('add', item)
+            axios.post('/api/employees', item).then(result => {
+                commit('add', { item, id : result.data.insertedId})
             })
         },
         update({ commit, state }, item) {
             const id = item.id
             axios.put(`/api/employees/${id}`, item).then(_ => {
-                commit('update', item)
+                commit('update', {item , id })
             })
         },
 

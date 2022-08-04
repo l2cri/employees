@@ -2,14 +2,22 @@
   <v-app>
     <v-main class="container align-center px-1">
       <h2 class="font-weight-light mb-2">
-        Vuetify CRUD Example
+        Список сотрудников
       </h2>
       <v-card>
         <v-data-table
             :headers="headers"
             :items="items"
+            :search="search"
             mobile-breakpoint="800"
             class="elevation-0">
+          <template v-slot:top>
+            <v-text-field
+                v-model="search"
+                label="Поиск"
+                class="mx-4"
+            />
+          </template>
           <template v-slot:item.actions="{ item }">
             <div class="text-truncate">
               <v-icon
@@ -35,36 +43,78 @@
           <template v-slot:activator="{ on }">
             <div class="d-flex">
               <v-btn color="primary" dark class="ml-auto ma-3" v-on="on">
-                New
+                Добавить
                 <v-icon small>mdi-plus-circle-outline</v-icon>
               </v-btn>
             </div>
           </template>
           <v-card>
             <v-card-title>
-              <span v-if="editedItem.id">Edit {{editedItem.id}}</span>
-              <span v-else>Create</span>
+              <span v-if="editedItem.id">Изменить {{editedItem.id}}</span>
+              <span v-else>Создать</span>
             </v-card-title>
             <v-card-text>
               <v-row>
                 <v-col cols="12" sm="12">
-                  <v-text-field v-model="editedItem.name" label="ФИО"></v-text-field>
+                  <v-text-field
+                      ref="name"
+                      v-model="editedItem.name"
+                      :rules="[rules.required]"
+                      label="ФИО"
+                      @keypress="isNotNumber($event)"
+                  />
                 </v-col>
                 <v-col cols="12" sm="12">
-                  <v-text-field v-model="editedItem.birthday" label="Дата рождения"></v-text-field>
+                  <v-menu
+                      v-model="menuBirthday"
+                      :close-on-content-click="false"
+                      :nudge-right="40"
+                      transition="scale-transition"
+                      offset-y
+                      min-width="auto"
+                  >
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-text-field
+                          ref="birthday"
+                          v-model="editedItem.birthday"
+                          label="Дата рождения"
+                          :rules="[rules.required]"
+                          prepend-icon="mdi-calendar"
+                          readonly
+                          v-bind="attrs"
+                          v-on="on"
+                      />
+                    </template>
+                    <v-date-picker
+                        v-model="editedItem.birthday"
+                        @input="menuBirthday = false"
+                    />
+                  </v-menu>
                 </v-col>
                 <v-col cols="12" sm="12">
-                  <v-text-field v-model="editedItem.position" label="Должность"></v-text-field>
+                  <v-text-field
+                      ref="position"
+                      v-model="editedItem.position"
+                      label="Должность"
+                      @keypress="!isNotNumber($event)"
+                      :rules="[rules.required]"
+                  />
                 </v-col>
                 <v-col cols="12" sm="12">
-                  <v-text-field v-model="editedItem.salary" label="Оклад"></v-text-field>
+                  <v-text-field
+                      ref="salary"
+                      v-model.number="editedItem.salary"
+                      label="Оклад"
+                      :rules="[rules.required]"
+                      @keypress="isNumber($event)"
+                  />
                 </v-col>
               </v-row>
             </v-card-text>
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn color="blue darken-1" text @click="showEditDialog()">Cancel</v-btn>
-              <v-btn color="blue darken-1" text @click="saveItem(editedItem)">Save</v-btn>
+              <v-btn color="blue darken-1" text @click="showEditDialog()">Отмена</v-btn>
+              <v-btn color="blue darken-1" text @click="saveItem(editedItem)">Сохранить</v-btn>
             </v-card-actions>
           </v-card>
         </v-dialog>
@@ -87,6 +137,11 @@ export default {
         { text: 'Action', value: 'actions', sortable: false },
       ],
       dialog: false,
+      search: '',
+      menuBirthday: false,
+      rules: {
+        required: value => !!value || 'Пожалуйста, заполните поле.',
+      },
       editedItem: {}
     }
   },
@@ -95,10 +150,30 @@ export default {
   },
   methods: {
     showEditDialog(item) {
-      this.editedItem = item||{}
+      this.editedItem = { ...item } || {}
       this.dialog = !this.dialog
     },
+    validateForm() {
+      let formValid = true;
+
+      this.headers.forEach(({ value }) => {
+        if (!this.editedItem[value] && value !== 'actions') {
+          formValid = false
+        }
+
+        if (this.$refs && this.$refs[value]) {
+          this.$refs[value].validate(true)
+        }
+      })
+
+
+      return formValid
+    },
     saveItem(item) {
+      if (!this.validateForm()) {
+        return false
+      }
+
      if(item.id) {
        this.$store.dispatch('employees/update', item)
      } else {
@@ -112,6 +187,22 @@ export default {
         this.$store.dispatch('employees/delete', item.id)
       }
     },
+    isNumber(evt) {
+      const charCode = evt.which ? evt.which : evt.keyCode;
+      if (
+          charCode > 31 &&
+          (charCode < 48 || charCode > 57) &&
+          charCode !== 46
+      ) {
+        evt.preventDefault();
+      }
+    },
+    isNotNumber(evt) {
+      const charCode = evt.which ? evt.which : evt.keyCode;
+      if (charCode >= 48 && charCode <= 57) {
+        evt.preventDefault();
+      }
+    }
   },
   computed: {
     items() {
