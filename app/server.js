@@ -1,5 +1,6 @@
 const express = require('express');
-const { MongoClient } = require('mongodb');
+const mongoose = require('mongoose')
+const employeeRouter = require('./routes/employee_routes')
 const bodyParser = require('body-parser');
 require('dotenv').config()
 
@@ -9,15 +10,19 @@ const port = 8000;
 const dbUrl = process.env.DB_URL;
 
 app.use(bodyParser.json());
+app.use('/api/employees', employeeRouter);
 
-new MongoClient(dbUrl)
-    .connect()
-    .then((database) => {
-        const db = database.db( process.env.DB_NAME)
-        require('./routes')(app, db.collection(process.env.DB_COLLECTIONS_EMPLOYEE));
+const startServer = () => {
+    app.listen(port, () => console.log('We are live on ' + port))
+}
 
-        app.listen(port, () => {
-            console.log('We are live on ' + port);
-        })
-    })
-    .catch(console.error);
+const connectDb = () => {
+    mongoose.Promise = require('bluebird')
+    mongoose.connect(dbUrl)
+    return mongoose.connection
+}
+
+connectDb()
+    .on('error', console.log)
+    .on('disconnect', connectDb)
+    .once('open', startServer)

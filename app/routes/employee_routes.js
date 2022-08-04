@@ -1,56 +1,39 @@
-const ObjectId = require('mongodb').ObjectId
+const express = require('express')
+const router = express.Router()
+const mongoose = require('mongoose')
+const Employee = require('../models/employee')
 
-module.exports = function (app, collection) {
-    // LIST
-    app.get('/api/employees', async (req, res) => {
-        const findResult = await collection.find({}).toArray();
-
-        res.send(findResult);
+router.get('/', (req, res) => {
+    Employee.find({}, (err, docs) => {
+        res.json(docs)
     })
-    // READ ON
-    app.get('/api/employees/:id', async (req, res) => {
-        const id = req.params.id;
-        const details = {'_id': new ObjectId(id)};
+})
 
-        const findResult = await collection.findOne(details);
+router.post('/', (req, res) => {
+    new Employee(req.body).save(function (err, result) {
+        res.json(result)
+    });
+})
 
-        res.send(findResult);
-    })
+router.delete('/:id',  async (req, res) => {
+    const id = req.params.id
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        res.json({ error : 'Wrong Id'})
+    } else {
+        const result = await Employee.deleteOne( {'_id': id});
+        res.json(result)
+    }
 
-    // DELETE
-    app.delete('/api/employees/:id', async (req, res) => {
-        const id = req.params.id;
-        const details = {'_id': new ObjectId(id)}
+})
 
-        const findResult = await collection.deleteOne(details);
+router.put('/:id',  async (req, res) => {
+    const id = req.params.id
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        res.json({ error : 'Wrong Id'})
+    } else {
+        const result = await Employee.replaceOne( {'_id': id}, req.body);
+        res.json(result)
+    }
+})
 
-        res.send(findResult);
-    })
-
-    // UPDATE
-    app.put('/api/employees/:id', async (req, res) => {
-        const id = req.params.id;
-        const details = {'_id': new ObjectId(id)}
-        const employee = {
-            name: req.body.name,
-            birthday: req.body.birthday,
-            position: req.body.position,
-            salary: req.body.salary,
-        }
-
-        const result = collection.replaceOne(details, employee, { upsert: false })
-        res.send(result)
-    })
-
-    // CREATE
-    app.post('/api/employees', async (req, res) => {
-        const result = await collection.insertOne({
-            name: req.body.name,
-            birthday: req.body.birthday,
-            position: req.body.position,
-            salary: req.body.salary,
-        })
-
-        res.send(result)
-    })
-}
+module.exports = router

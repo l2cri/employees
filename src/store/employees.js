@@ -54,7 +54,7 @@ export default {
         },
         add({ commit, state }, item) {
             axios.post('/api/employees', item).then(result => {
-                commit('add', { item, id : result.data.insertedId})
+                commit('add', { item, id : result.data._id })
             })
         },
         update({ commit, state }, item) {
