@@ -9,6 +9,10 @@
             :headers="headers"
             :items="items"
             :search="search"
+            :disable-sort="true"
+            :loading="loading"
+            :server-items-length="totalCount"
+            :options.sync="options"
             mobile-breakpoint="800"
             class="elevation-0">
           <template v-slot:top>
@@ -130,12 +134,14 @@ export default {
   data () {
     return {
       headers: [
-        { text: 'ФИО', value: 'name',  sortable: false },
-        { text: 'Дата рождения', value: 'birthday',  sortable: false },
-        { text: 'Должность', value: 'position',  sortable: false },
-        { text: 'Оклад', value: 'salary',  sortable: false },
-        { text: 'Action', value: 'actions', sortable: false },
+        { text: 'ФИО', value: 'name' },
+        { text: 'Дата рождения', value: 'birthday'},
+        { text: 'Должность', value: 'position' },
+        { text: 'Оклад', value: 'salary' },
+        { text: 'Action', value: 'actions' },
       ],
+      options: {},
+      loading: false,
       dialog: false,
       search: '',
       menuBirthday: false,
@@ -145,8 +151,10 @@ export default {
       editedItem: {}
     }
   },
-  mounted() {
-    this.$store.dispatch('employees/load')
+  async mounted() {
+    this.loading = true
+    await this.$store.dispatch('employees/load', { page: 0, limit: 10})
+    this.loading = false
   },
   methods: {
     showEditDialog(item) {
@@ -207,7 +215,31 @@ export default {
   computed: {
     items() {
       return this.$store.state.employees.items
+    },
+    totalCount() {
+      if (this.options.itemsPerPage === -1) {
+        return -1
+      }
+      return this.$store.state.employees.paginate.totalItems
     }
-  }
+  },
+  watch: {
+    options: {
+      async handler() {
+        const page = this.options.page - 1
+        const itemsPerPage = this.options.itemsPerPage
+
+        if (
+            page !==  this.$store.state.employees.paginate.page
+            || itemsPerPage !== this.$store.state.employees.paginate.limit
+        ) {
+          this.loading = true
+          await this.$store.dispatch('employees/load', { page, limit: itemsPerPage})
+          this.loading = false
+        }
+      },
+      deep: true,
+    },
+  },
 }
 </script>

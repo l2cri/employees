@@ -4,13 +4,24 @@ export default {
     namespaced: true,
     state: () => ({
         items: [],
+        paginate: {
+            page: 0,
+            limit: 10,
+            totalPages: 0,
+            totalItems: 0
+        }
     }),
     mutations: {
-        set(state, items) {
+        set(state, data) {
+
+            const {items, ...paginate} = data
+
             state.items = items.map((item) => ({
                 id: item._id,
                 ...item
             }))
+
+            state.paginate = paginate
         },
         delete(state, id) {
             const items = [ ...state.items];
@@ -34,8 +45,8 @@ export default {
         },
     },
     actions: {
-        load ({ commit }) {
-            axios.get(`/api/employees`)
+        load ({ commit }, { page = 0, limit = 10 }) {
+            return axios.get(`/api/employees?page=${page}&limit=${limit}`)
                 .then((response) => {
                     commit('set', response.data)
                 })
