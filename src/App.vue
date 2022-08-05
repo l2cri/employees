@@ -99,7 +99,7 @@
                       ref="position"
                       v-model="editedItem.position"
                       label="Должность"
-                      @keypress="!isNotNumber($event)"
+                      @keypress="isNotNumber($event)"
                       :rules="[rules.required]"
                   />
                 </v-col>

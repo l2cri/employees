@@ -6,6 +6,7 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
+    "test:e2e": "vue-cli-service test:e2e",
     "dev": "nodemon --watch app --watch libs app/server.js"
   },
   "main": "index.js",
@@ -21,8 +22,10 @@
     "vuex": "^3.6.2"
   },
   "devDependencies": {
+    "@vue/cli-plugin-e2e-cypress": "~5.0.0",
     "@vue/cli-plugin-vuex": "~5.0.0",
     "@vue/cli-service": "~5.0.0",
+    "cypress": "^9.7.0",
     "nodemon": "^2.0.19",
     "sass": "~1.32.0",
     "sass-loader": "^10.0.0",
