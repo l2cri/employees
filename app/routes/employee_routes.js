@@ -8,12 +8,23 @@ router.get('/', (req, res) => {
         page: parseInt(req.query.page, 10) || 1,
         limit: parseInt(req.query.limit, 10) || 10,
         sort: req.query.sort,
-        pagination: !(req.query.limit && req.query.limit === '-1'), // all elements
     }
 
-    Employee.paginate({}, pageOptions,  (err, result) => {
-        res.json(result)
-    })
+    Employee.search(req.query.query)
+        .skip((pageOptions.page - 1) * pageOptions.limit)
+        .limit(pageOptions.limit > 0 ? pageOptions.limit : false)
+        .sort(pageOptions.sort)
+        .exec(function (err, items) {
+            Employee.search(req.query.query).count().exec(function (err, totalItems) {
+                res.json({
+                    docs : items,
+                    totalDocs: totalItems,
+                    limit: pageOptions.limit,
+                    totalPages: pageOptions.limit > 0 ? Math.ceil(totalItems / pageOptions.limit) : 1,
+                    page: pageOptions.page,
+                })
+            })
+        })
 })
 
 router.post('/', (req, res) => {

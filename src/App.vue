@@ -17,7 +17,7 @@
           <template v-slot:top>
             <v-text-field
                 v-model="search"
-                label="Поиск"
+                label="Поиск по имени или должности"
                 class="mx-4"
             />
           </template>
@@ -215,18 +215,26 @@ export default {
         return -1
       }
       return this.$store.state.employees.paginate.totalDocs
+    },
+    optionsPage() {
+      const optionsPage = {
+        page: this.options.page,
+        limit: this.options.itemsPerPage,
+      }
+      if (this.options.sortBy && this.options.sortBy.length) {
+        const suffix =  this.options.sortDesc[0] === false ? '-' : ''
+        optionsPage['sort'] = suffix  + this.options.sortBy[0]
+      }
+
+      return optionsPage
     }
   },
   watch: {
     options: {
       async handler() {
-        const optionsPage = {
-          page: this.options.page,
-          limit: this.options.itemsPerPage,
-        }
-        if (this.options.sortBy && this.options.sortBy.length) {
-          const suffix =  this.options.sortDesc[0] === false ? '-' : ''
-          optionsPage['sort'] = suffix  + this.options.sortBy[0]
+        const optionsPage = this.optionsPage
+        if (this.search && this.search.length) {
+          optionsPage['query'] = this.search.trim()
         }
         this.loading = true
         await this.$store.dispatch('employees/load', optionsPage)
@@ -235,6 +243,15 @@ export default {
       },
       deep: true,
     },
+    search(query) {
+      this.loading = true
+      clearTimeout(this._searchTimerId)
+      this._searchTimerId = setTimeout(async () => {
+        this.options.page = 1
+        await this.$store.dispatch('employees/load', { ...this.optionsPage, query: query.trim()})
+        this.loading = false
+      }, 500)
+    }
   },
 }
 </script>

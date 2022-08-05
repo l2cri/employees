@@ -1,5 +1,4 @@
 const mongoose = require('mongoose')
-const mongoosePaginate = require('mongoose-paginate-v2')
 
 const employeeSchema = mongoose.Schema({
     name: String,
@@ -8,7 +7,25 @@ const employeeSchema = mongoose.Schema({
     salary: String,
 })
 
-employeeSchema.plugin(mongoosePaginate)
+employeeSchema.statics.search = function (query, cb) {
+    let queryOptions = {}
+    if (query && query.length) {
+        queryOptions = {
+            $or: [{
+                name: {
+                    '$regex': query,
+                    '$options': 'i'
+                }
+            }, {
+                position: {
+                    '$regex': query,
+                    '$options': 'i'
+                }
+            }]
+        }
+    }
+    return this.find(queryOptions, cb)
+}
 
 const Employee = mongoose.model('Employee', employeeSchema)
 
